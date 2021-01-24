@@ -8,7 +8,7 @@ pkgver=1.1.46.916.g416cacf1
 epoch=1
 _snapid=pOBIoZ2LrCB3rDohMxoYGnbN14EHOgD7
 _revision=43
-pkgrel=1
+pkgrel=2
 pkgdesc='A proprietary music streaming service'
 arch=('x86_64')
 license=('custom')
@@ -40,7 +40,7 @@ package() {
     cp -a squashfs-root/usr/share/spotify "${pkgdir}/usr/share/"
 
     install -Dm644 "${pkgdir}"/usr/share/spotify/spotify.desktop "${pkgdir}"/usr/share/applications/spotify.desktop
-    install -Dm644 "${pkgdir}"/usr/share/spotify/icons/spotify-linux-512.png "${pkgdir}"/usr/share/pixmaps/spotify-client.png
+    sed -i 's/\/usr\/share\/spotify\/icons\/spotify-linux-128.png/spotify/' "${pkgdir}"/usr/share/applications/spotify.desktop
 
     for size in 22 24 32 48 64 128 256 512; do
         install -Dm644 "${pkgdir}/usr/share/spotify/icons/spotify-linux-$size.png" \
