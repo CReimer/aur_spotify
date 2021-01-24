@@ -4,69 +4,40 @@
 # Contributor: Eothred <yngve.levinsen@gmail.com>
 
 pkgname=spotify
-pkgver=1.1.42.622
+pkgver=1.1.46.916.g416cacf1
 epoch=1
-_commit=gbd112320
-_ver_x86_64=37
-#_ver_i686=10
-pkgrel=2
+_snapid=pOBIoZ2LrCB3rDohMxoYGnbN14EHOgD7
+_revision=43
+pkgrel=1
 pkgdesc='A proprietary music streaming service'
 arch=('x86_64')
 license=('custom')
 url='https://www.spotify.com'
 depends=('alsa-lib>=1.0.14' 'gtk2' 'libsystemd' 'libxss' 'desktop-file-utils' 'openssl' 'nss' 'at-spi2-atk')
 depends_x86_64=('libcurl-gnutls')
-depends_i686=('libcurl-compat')
+makedepends=('squashfs-tools')
 optdepends=('ffmpeg-compat-57: Adds support for playback of local files'
             'zenity: Adds support for importing local files'
             'libnotify: Desktop notifications')
 options=('!strip')
-
-# http://repository.spotify.com/dists/stable/Release
-# http://repository.spotify.com/dists/stable/non-free/binary-amd64/Packages
-# http://repository.spotify.com/dists/stable/non-free/binary-i386/Packages
-# http://repository.spotify.com/dists/stable/Release.gpg
 source=('spotify.protocol'
-        'LICENSE'
-        "${pkgname}-${pkgver}-Release::http://repository.spotify.com/dists/stable/Release"
-        "${pkgname}-${pkgver}-Release.sig::http://repository.spotify.com/dists/stable/Release.gpg")
-source_x86_64=("${pkgname}-${pkgver}-x86_64.deb::http://repository.spotify.com/pool/non-free/s/spotify-client/spotify-client_${pkgver}.${_commit}-${_ver_x86_64}_amd64.deb"
-               "${pkgname}-${pkgver}-x86_64-Packages::http://repository.spotify.com/dists/stable/non-free/binary-amd64/Packages")
-# source_i686=("${pkgname}-${pkgver}-i686.deb::http://repository.spotify.com/pool/non-free/s/spotify-client/spotify-client_${pkgver}.${_commit}-${_ver_i686}_i386.deb"
-#              "${pkgname}-${pkgver}-i686-Packages::http://repository.spotify.com/dists/stable/non-free/binary-i386/Packages")
+        'LICENSE')
+# Get latest version info: curl -H 'Snap-Device-Series: 16' http://api.snapcraft.io/v2/snaps/info/spotify
+source_x86_64=("https://api.snapcraft.io/api/v1/snaps/download/${_snapid}_${_revision}.snap")
 sha512sums=('999abe46766a4101e27477f5c9f69394a4bb5c097e2e048ec2c6cb93dfa1743eb436bde3768af6ba1b90eaac78ea8589d82e621f9cbe7d9ab3f41acee6e8ca20'
-            '2e16f7c7b09e9ecefaa11ab38eb7a792c62ae6f33d95ab1ff46d68995316324d8c5287b0d9ce142d1cf15158e61f594e930260abb8155467af8bc25779960615'
-            'SKIP'
-            'SKIP')
-sha512sums_x86_64=('a3fe98d69460ffd641df3219c2a3d164a33e2b52c86a56276e473dd5c3a43d6304df3b77fefcf0ca6c09cb6e2c8dacab65573cf7543725b6c8d402832149e122'
-                   'af7eb8c50e003638cab04ef1cad36f43379e678a1071c65844a6ff8963434b427044b76159e51c1383698c309c814261ed85aab02ffb86ac73ee86181aada5e9')
-validpgpkeys=('8FD3D9A8D3800305A9FFF259D1742AD60D811D58') # Spotify <tux@spotify.com>
-# Old Keys:
-# 931FF8E79F0876134EDDBDCCA87FF9DF48BF1C90
-# 2EBF997C15BDA244B6EBF5D84773BD5E130D1D45
-
-# Spotify uses different names for the arch
-if [ "${CARCH}" = "i686" ]; then
-    _SPOTIFY_ARCH=i386
-else
-    _SPOTIFY_ARCH=amd64
-fi
+            '2e16f7c7b09e9ecefaa11ab38eb7a792c62ae6f33d95ab1ff46d68995316324d8c5287b0d9ce142d1cf15158e61f594e930260abb8155467af8bc25779960615')
+sha512sums_x86_64=('5b3d5d1f52a554c8e775b8aed16ef84e96bf3b61a2b53266e10d3c47e341899310af13cc8513b04424fc14532e36543a6fae677f80a036e3f51c75166d8d53d1')
 
 prepare() {
-    # Validate hashes from the PGP signed "Release" file
-    echo "$(grep non-free/binary-${_SPOTIFY_ARCH}/Packages ${pkgname}-${pkgver}-Release | tail -n 2 | head -n 1 | awk '{print $1}') ${pkgname}-${pkgver}-${CARCH}-Packages" \
-        > "${pkgname}-${pkgver}-${CARCH}-Packages.sha256"
-    sha256sum -c "${pkgname}-${pkgver}-${CARCH}-Packages.sha256"
-
-    echo "$(grep SHA512 ${pkgname}-${pkgver}-${CARCH}-Packages | head -n 1 | awk '{print $2}') ${pkgname}-${pkgver}-${CARCH}.deb" \
-        > "${pkgname}-${pkgver}-${CARCH}.deb.sha512"
-    sha512sum -c "${pkgname}-${pkgver}-${CARCH}.deb.sha512"
+    cd "${srcdir}"
+    unsquashfs ${_snapid}_${_revision}.snap
 }
 
 package() {
     cd "${srcdir}"
 
-    tar -xzf data.tar.gz -C "${pkgdir}"
+    mkdir -p "${pkgdir}/usr/share/spotify"
+    cp -a squashfs-root/usr/share/spotify "${pkgdir}/usr/share/"
 
     install -Dm644 "${pkgdir}"/usr/share/spotify/spotify.desktop "${pkgdir}"/usr/share/applications/spotify.desktop
     install -Dm644 "${pkgdir}"/usr/share/spotify/icons/spotify-linux-512.png "${pkgdir}"/usr/share/pixmaps/spotify-client.png
@@ -81,6 +52,7 @@ package() {
     mv "${pkgdir}/usr/share/spotify" "${pkgdir}/opt/"
 
     # Symlink spotify binary which is located in /opt
+    mkdir -p "${pkgdir}/usr/bin"
     ln -sf /opt/spotify/spotify "${pkgdir}/usr/bin/spotify"
 
     # Copy protocol file for KDE
